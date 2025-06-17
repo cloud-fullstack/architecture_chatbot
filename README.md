@@ -86,12 +86,12 @@ For detailed architecture documentation, see:
 
 This project is part of the larger medical chatbot platform ecosystem. Key related repositories include:
 
-- [infra](https://github.com/cloud-fullstack/infra/): Infrastructure as Code (Terraform) for VPS setup and K3s cluster
+- [chat-assist-medical](https://github.com/cloud-fullstack/chat-assist-medical): Angular medical chat interface mockup
+- [infrastructure](https://github.com/cloud-fullstack/infra/): Infrastructure as Code (Terraform) for VPS setup and K3s cluster
 - [k3s](https://github.com/cloud-fullstack/k3s/): Kubernetes cluster configuration and Helm charts
 - [chatbot-backend](https://github.com/cloud-fullstack/backend_spring_chatbot/): Spring Boot backend services
 - [chatbot-docker](https://github.com/cloud-fullstack/chatbot-docker/): Docker configurations and deployment scripts
 - [spring-client-chatbot](https://github.com/cloud-fullstack/spring-client-chatbot/): Spring Boot client application
-- [chat-assist-medical](https://github.com/cloud-fullstack/chat-assist-medical): Angular medical chat interface mockup
 
 ## Frontend Integration
 
@@ -119,14 +119,6 @@ The frontend communicates with the backend through REST endpoints:
 - Voice Processing: `/api/voice/*`
 
 Each repository contains its own detailed documentation and setup instructions.
-
-## Related Documentation
-
-- [Main Architecture](../README.md): Overall system architecture
-- [REST Architecture](docs/rest_architecture.md): Detailed REST implementation
-- [API Design](docs/api_design.md): REST API specifications
-- [Security](docs/security.md): Security configurations
-- [Monitoring](docs/monitoring.md): Monitoring setup
 
 ## Security Architecture
 
