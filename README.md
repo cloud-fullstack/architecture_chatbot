@@ -43,19 +43,6 @@ graph TD
         end
     end
 
-    subgraph Backend Processing Layer
-        direction TB
-        N[Kafka Broker] --> O[Topics]
-        O --> P[Partitions]
-        P --> Q[Messages]
-        
-        subgraph Topics
-            R[chat_messages] --> S[2 Partitions]
-            T[llm.requests] --> U[2 Partitions]
-            V[llm.responses] --> W[2 Partitions]
-        end
-    end
-
     subgraph Monitoring & Analytics
         X[Prometheus]
         Y[Grafana]
@@ -68,12 +55,6 @@ graph TD
     E --> F
     F --> G
     F --> H
-    
-    %% Backend Service Connections
-    G --> N
-    H --> N
-    N --> G
-    N --> H
     
     %% Monitoring Connections
     X --> Y
