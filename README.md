@@ -1,6 +1,13 @@
-# REST Architecture for Chatbot Platform
+# Chatbot Platform Architecture
 
 [Back to Main Architecture](../README.md)
+
+## Architecture Variants
+
+1. [REST Architecture](#rest-architecture-for-chatbot-platform) - Standard REST-based implementation
+2. [Dynamic Model Routing](./DYNAMIC_MODEL_ROUTING.md) - Advanced model selection with cost optimization
+
+## REST Architecture for Chatbot Platform
 
 ## Author
 Aldo Grandoni
