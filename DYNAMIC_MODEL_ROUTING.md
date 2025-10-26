@@ -743,32 +743,255 @@ def generate_insights(root_causes: List[dict]):
     insights = []
     
     for cause in root_causes:
-        # Get similar past resolutions
-        past_solutions = find_similar_issues(cause["theme"])
-        
-        # Generate recommendations
-        recommendation = llm.generate(
-            model="gpt-4",
-            messages=[{
-                "role": "system",
-                "content": "Generate a business recommendation based on this root cause analysis."
-            }, {
-                "role": "user",
-                "content": json.dumps({
-                    "issue": cause["theme"],
-                    "root_cause": cause["root_cause"],
-                    "past_solutions": past_solutions
-                })
-            }]
-        )
-        
-        insights.append({
-            "issue": cause["theme"],
-            "impact": f"{cause['confidence']*100:.1f}% of complaints",
-            "root_cause": cause["root_cause"],
-            "recommendation": recommendation,
-            "example_tickets": cause["example_tickets"]
-        })
+        ## Simple Visualization Approach
+
+### 1. Client-Side Charting (Recommended)
+
+**Technology**: Chart.js (simple, widely-used, works in all browsers)
+
+**Example Implementation**:
+```html
+<!-- In your HTML -->
+<canvas id="ticketChart"></canvas>
+
+<!-- Add Chart.js from CDN -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<!-- Initialize chart -->
+<script>
+async function loadChart() {
+  // Get data from your API
+  const response = await fetch('/api/ticket-metrics');
+  const data = await response.json();
+  
+  // Create chart
+  const ctx = document.getElementById('ticketChart');
+  new Chart(ctx, {
+    type: 'bar',  // or 'line', 'pie', etc.
+    data: {
+      labels: data.labels,
+      datasets: [{
+        label: 'Tickets',
+        data: data.values,
+        borderWidth: 1
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        title: {
+          display: true,
+          text: 'Tickets by Status'
+        }
+      }
+    }
+  });
+}
+
+// Load chart when page loads
+loadChart();
+</script>
+```
+
+### 2. Server-Side Chart Generation (If Needed)
+
+**Technology**: Python with FastAPI + Matplotlib (simple, no extra services needed)
+
+```python
+from fastapi import FastAPI, Response
+import matplotlib.pyplot as plt
+import io
+
+app = FastAPI()
+
+@app.get("/chart.png")
+async def generate_chart():
+    # Sample data
+    labels = ['Open', 'In Progress', 'Resolved']
+    values = [12, 19, 3]
+    
+    # Create simple chart
+    plt.bar(labels, values)
+    plt.title('Tickets by Status')
+    
+    # Save to bytes
+    img = io.BytesIO()
+    plt.savefig(img, format='png')
+    plt.close()
+    img.seek(0)
+    
+    # Return as image
+    return Response(content=img.read(), media_type="image/png")
+```
+
+### 3. Caching Strategy (Simple)
+
+For most use cases, browser caching is sufficient:
+```python
+from fastapi import FastAPI
+from fastapi.responses import FileResponse
+import os
+
+app = FastAPI()
+
+@app.get("/cached-chart.png")
+async def get_cached_chart():
+    cache_file = "cached_chart.png"
+    
+    # Regenerate if older than 1 hour
+    if not os.path.exists(cache_file) or \
+       (time.time() - os.path.getmtime(cache_file)) > 3600:
+        # Generate and save chart
+        plt.bar([1, 2, 3], [4, 5, 6])
+        plt.savefig(cache_file)
+        plt.close()
+    
+    # Serve with cache headers
+    return FileResponse(
+        cache_file,
+        headers={"Cache-Control": "max-age=3600"}  # Cache for 1 hour
+    )
+```
+
+### 4. Chart Type Selection
+
+```python
+def get_chart_type(data, intent):
+    """Simple chart type selection"""
+    if intent == "trend" or intent == "trend_over_time":
+        return "line"
+    elif intent == "compare" or intent == "comparison":
+        return "bar" if len(data) < 10 else "table"
+    elif intent == "parts_of_whole" or intent == "composition":
+        return "pie" if len(data) < 7 else "bar"
+    elif intent == "distribution":
+        return "histogram"
+    return "table"  # default fallback
+```
+
+### 5. Simple Data Format
+
+API response format:
+```json
+{
+  "chart_type": "bar",
+  "data": {
+    "labels": ["Open", "In Progress", "Resolved"],
+    "values": [12, 19, 3]
+  },
+  "title": "Tickets by Status"
+}
+```
+
+This approach is:
+- Easy to implement and maintain
+- Works with common web technologies
+- Scales well for most use cases
+- Requires minimal infrastructure
+
+### Rendering Strategy
+
+1. **Client-Side Rendering (Recommended for Most Cases)**
+   - Use Chart.js for interactive charts (simple API, good documentation)
+   - Works directly in the browser with minimal setup
+   - Example response format:
+   ```json
+   {
+     "chart_type": "line",
+     "data": {
+       "labels": ["Jan", "Feb", "Mar"],
+       "datasets": [{
+         "label": "Tickets",
+         "data": [12, 19, 15],
+         "borderColor": "#3e95cd"
+       }]
+     },
+     "options": {
+       "responsive": true,
+       "title": {"display": true, "text": "Tickets Over Time"}
+     }
+   }
+   ```
+
+2. **Server-Side Rendering (For Complex Cases)**
+   - Use a simple REST endpoint that generates images
+   - Example with FastAPI:
+   ```python
+   from fastapi import FastAPI
+   import matplotlib.pyplot as plt
+   import io
+   import base64
+
+   app = FastAPI()
+
+   @app.post("/api/generate-chart")
+   async def generate_chart(chart_type: str, data: dict):
+       plt.figure()
+       if chart_type == "line":
+           plt.plot(data["x"], data["y"])
+       elif chart_type == "bar":
+           plt.bar(data["labels"], data["values"])
+       
+       # Convert plot to base64
+       img = io.BytesIO()
+       plt.savefig(img, format='png')
+       img.seek(0)
+       return {"image": base64.b64encode(img.read()).decode('utf-8')}
+   ```
+
+3. **Caching Strategy**
+   - For logged-in users: Cache chart data in localStorage
+   - For shared/public charts: Use simple file-based caching on the server
+   - Add cache headers for browser caching
+   ```python
+   from fastapi import Response
+   
+   @app.get("/chart/{chart_id}")
+   async def get_chart(chart_id: str):
+       # Check cache
+       cache_path = f"cache/{chart_id}.json"
+       if os.path.exists(cache_path):
+           with open(cache_path) as f:
+               return Response(
+                   content=f.read(),
+                   headers={
+                       "Cache-Control": "max-age=3600",  # Cache for 1 hour
+                       "Content-Type": "application/json"
+                   }
+               )
+       # Generate and cache if not exists
+       # ...
+   ```
+
+### Example Frontend Implementation
+```html
+<div>
+  <canvas id="myChart"></canvas>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+async function loadChart() {
+  const response = await fetch('/api/get-chart-data');
+  const chartData = await response.json();
+  
+  const ctx = document.getElementById('myChart');
+  new Chart(ctx, {
+    type: chartData.chart_type,
+    data: chartData.data,
+    options: chartData.options
+  });
+}
+</script>
+```
+
+            insights.append({
+                "issue": cause["theme"],
+                "impact": f"{cause['confidence']*100:.1f}% of complaints",
+                "root_cause": cause["root_cause"],
+                "recommendation": recommendation,
+                "example_tickets": cause["example_tickets"]
+            })
     
     return insights
 ```
