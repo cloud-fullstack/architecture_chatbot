@@ -346,12 +346,7 @@ class AnalyticsModelRouter:
 
 ## Visualization Strategy
 
-### 1. Chart Generation
-- **Simple Charts**: Use Vega-Lite for client-side rendering
-- **Complex Visualizations**: Generate server-side using Matplotlib/Plotly
-- **Caching**: Store generated visualizations in Redis with TTL
-
-### 2. Response Templates
+### 1. Response Templates
 ```python
 class ResponseGenerator:
     def generate_response(self, results: Dict, intent: Dict) -> Dict:
